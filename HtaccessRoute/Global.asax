@@ -45,7 +45,7 @@
                     string htaccessPath = System.IO.Path.Combine(directory, ".htaccess");
                     if (System.IO.File.Exists(htaccessPath))
                     {
-                        routingHandler = RoutingHandler.LoadFromHtaccess(DEFAULT_PAGE, htaccessPath);
+                        routingHandler = RoutingHandler.LoadFromHtaccess(DEFAULT_PAGE, htaccessPath, httpApplication.Request.Url);
                         break;
                     }
                 }

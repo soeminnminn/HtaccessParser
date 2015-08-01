@@ -9,6 +9,7 @@ using System.Web;
 public class GenericHttpHandler : IHttpHandler
 {
     #region Variables
+    private Uri m_uri = null;
     private string m_url = "";
     private int m_errorCode = 200;
     private Exception m_exception = null;
@@ -20,6 +21,11 @@ public class GenericHttpHandler : IHttpHandler
         return new GenericHttpHandler(url);
     }
 
+    public static GenericHttpHandler Create(string url, Uri baseUri)
+    {
+        return new GenericHttpHandler(url, baseUri);
+    }
+
     public static GenericHttpHandler Create(int errorCode, Exception ex)
     {
         return new GenericHttpHandler(errorCode, ex);
@@ -27,10 +33,53 @@ public class GenericHttpHandler : IHttpHandler
     #endregion
 
     #region Constructor
-    public GenericHttpHandler(string url)
+    public GenericHttpHandler(string requestUrl)
 	{
-        this.m_url = url;
+        if (!string.IsNullOrEmpty(requestUrl))
+        {
+            try
+            {
+                this.m_uri = new Uri(requestUrl);
+            }
+            catch
+            { }
+
+            if (this.m_uri == null)
+                this.m_url = requestUrl;
+        }
 	}
+
+    public GenericHttpHandler(string requestUrl, Uri baseUri)
+    {
+        if (!string.IsNullOrEmpty(requestUrl))
+        {
+            if (baseUri != null)
+            {
+                string url = baseUri.Scheme + "://" + baseUri.Authority;
+                for (int i = 0; i < baseUri.Segments.Length; i++)
+                {
+                    url += baseUri.Segments[i];
+                }
+
+                if (requestUrl.StartsWith("~/"))
+                    url += requestUrl.Substring(2);
+                else if (requestUrl.StartsWith("/"))
+                    url += requestUrl.Substring(1);
+                else
+                    url += requestUrl;
+
+                try
+                {
+                    this.m_uri = new Uri(url);
+                }
+                catch
+                { }
+            }
+
+            if (this.m_uri == null)
+                this.m_url = requestUrl;
+        }
+    }
 
     public GenericHttpHandler(int errorCode, Exception ex)
     {
@@ -45,27 +94,42 @@ public class GenericHttpHandler : IHttpHandler
         Uri uri = null;
         if (this.m_errorCode == 200)
         {
-            Uri requestUri = context.Request.Url;
-            string url = this.m_url;
-            if (url.StartsWith("~/"))
+            if (this.m_uri == null)
             {
-                string baseUrl = requestUri.GetLeftPart(UriPartial.Authority) + context.Request.ApplicationPath;
-                url = baseUrl + "/" + this.m_url.Substring(2);
+                if (!string.IsNullOrEmpty(this.m_url))
+                {
+                    Uri requestUri = context.Request.Url;
+                    string url = this.m_url;
+                    if (url.StartsWith("~/"))
+                    {
+                        string baseUrl = requestUri.GetLeftPart(UriPartial.Authority) + context.Request.ApplicationPath;
+                        url = baseUrl + "/" + this.m_url.Substring(2);
+                    }
+                    else
+                    {
+                        url = requestUri.Scheme + "://" + requestUri.Authority;
+                        for (int i = 0; i < requestUri.Segments.Length; i++)
+                        {
+                            url += requestUri.Segments[i];
+                        }
+                        if (this.m_url.StartsWith("/"))
+                            url += this.m_url.Substring(1);
+                        else
+                            url += this.m_url;
+                    }
+
+                    uri = new Uri(url);
+                }
+                else
+                {
+                    this.m_errorCode = 400;
+                    this.m_exception = new System.Exception("Bad request!");
+                }
             }
             else
             {
-                url = requestUri.Scheme + "://" + requestUri.Authority;
-                for (int i = 0; i < requestUri.Segments.Length; i++)
-                {
-                    url += requestUri.Segments[i];
-                }
-                if (this.m_url.StartsWith("/"))
-                    url += this.m_url.Substring(1);
-                else
-                    url += this.m_url;
+                uri = this.m_uri;
             }
-
-            uri = new Uri(url);
         }
 
         if (uri != null)

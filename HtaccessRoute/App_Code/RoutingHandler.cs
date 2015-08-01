@@ -14,6 +14,8 @@ using System.IO;
 public class RoutingHandler : IRouteHandler
 {
     #region Variables
+    private Uri m_baseUri = null;
+    private string m_defaultPage = null;
     private Dictionary<string, string> m_urlMatcher = new Dictionary<string, string>();
     private Dictionary<string, string> m_errorDocuments = new Dictionary<string, string>();
     #endregion
@@ -22,12 +24,12 @@ public class RoutingHandler : IRouteHandler
     public static RoutingHandler LoadFromHtaccess(string defaultPage)
     {
         string htaccessPath = System.Web.HttpContext.Current.Server.MapPath("~/.htaccess");
-        return RoutingHandler.LoadFromHtaccess(defaultPage, htaccessPath);
+        return RoutingHandler.LoadFromHtaccess(defaultPage, htaccessPath, null);
     }
 
-    public static RoutingHandler LoadFromHtaccess(string defaultPage, string htaccessPath)
+    public static RoutingHandler LoadFromHtaccess(string defaultPage, string htaccessPath, Uri baseUri)
     {
-        RoutingHandler handler = new RoutingHandler(defaultPage);
+        RoutingHandler handler = new RoutingHandler(defaultPage, baseUri);
 
         if (string.IsNullOrEmpty(htaccessPath)) return handler;
         FileInfo file = new FileInfo(htaccessPath);
@@ -81,8 +83,9 @@ public class RoutingHandler : IRouteHandler
     #endregion
 
     #region Constructor
-    public RoutingHandler(string defaultPage)
+    public RoutingHandler(string defaultPage, Uri baseUri)
     {
+        this.BaseUri = baseUri;
         this.DefaultPage = defaultPage;
     }
     #endregion
@@ -96,13 +99,8 @@ public class RoutingHandler : IRouteHandler
             return this.HandlePage(requestUrl);
         }
 
-        //foreach (var urlParm in requestContext.RouteData.Values)
-        //{
-        //    requestContext.HttpContext.Items[urlParm.Key] = urlParm.Value;
-        //}
-
         //return BuildManager.CreateInstanceFromVirtualPath(this.VirtualPath, typeof(Page)) as IHttpHandler;
-        return GenericHttpHandler.Create(this.DefaultPage) as IHttpHandler;
+        return GenericHttpHandler.Create(this.DefaultPage, this.BaseUri) as IHttpHandler;
     }
 
     public IHttpHandler GetHttpHandler(RequestContext requestContext)
@@ -119,7 +117,7 @@ public class RoutingHandler : IRouteHandler
         }
 
         //return BuildManager.CreateInstanceFromVirtualPath(this.VirtualPath, typeof(Page)) as IHttpHandler;
-        return GenericHttpHandler.Create(this.DefaultPage) as IHttpHandler;
+        return GenericHttpHandler.Create(this.DefaultPage, this.BaseUri) as IHttpHandler;
     }
 
     private IHttpHandler HandlePage(string requestUrl)
@@ -134,7 +132,7 @@ public class RoutingHandler : IRouteHandler
                     string url = Regex.Replace(requestUrl, key, this.m_urlMatcher[key]);
                     try
                     {
-                        return GenericHttpHandler.Create(url) as IHttpHandler;
+                        return GenericHttpHandler.Create(url, this.BaseUri) as IHttpHandler;
                     }
                     catch (HttpException ex)
                     {
@@ -144,14 +142,14 @@ public class RoutingHandler : IRouteHandler
                 }
             }
         }
-        return GenericHttpHandler.Create(this.DefaultPage) as IHttpHandler;
+        return GenericHttpHandler.Create(this.DefaultPage, this.BaseUri) as IHttpHandler;
     }
 
     private IHttpHandler GetErrorPage(int errorCode, Exception ex)
     {
         string errorPageUrl = this.m_errorDocuments[errorCode.ToString()];
         if (string.IsNullOrEmpty(errorPageUrl))
-            return GenericHttpHandler.Create(errorPageUrl) as IHttpHandler;
+            return GenericHttpHandler.Create(errorPageUrl, this.BaseUri) as IHttpHandler;
 
         return GenericHttpHandler.Create(errorCode, ex) as IHttpHandler;
     }
@@ -189,6 +187,28 @@ public class RoutingHandler : IRouteHandler
         get { return false; }
     }
 
-    public string DefaultPage { get; private set; }
+    public Uri BaseUri 
+    {
+        get
+        {
+            if (this.m_baseUri == null)
+            {
+                try
+                {
+                    this.m_baseUri = HttpContext.Current.Request.Url;
+                }
+                catch
+                { }
+            }
+            return this.m_baseUri;
+        }
+        private set { this.m_baseUri = value; }
+    }
+
+    public string DefaultPage 
+    {
+        get { return this.m_defaultPage; }
+        private set { this.m_defaultPage = value; }
+    }
     #endregion
 }
