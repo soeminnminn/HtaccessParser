@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HtaccessParserTest", "HtaccessParserTest\HtaccessParserTest.csproj", "{91795F29-0AE0-49C5-8357-7972F5C38813}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HtaccessParser", "HtaccessParser\HtaccessParser.csproj", "{4AE40FED-BD92-44B9-B416-4DD11F8D55C1}"
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "HtaccessRoute", "HtaccessRoute\", "{16C83444-D090-465C-B738-3D88A0F4E866}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
+		ProjectReferences = "{4AE40FED-BD92-44B9-B416-4DD11F8D55C1}|HtaccessParser.dll;"
+		Debug.AspNetCompiler.VirtualPath = "/HtaccessRoute"
+		Debug.AspNetCompiler.PhysicalPath = "HtaccessRoute\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\HtaccessRoute\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/HtaccessRoute"
+		Release.AspNetCompiler.PhysicalPath = "HtaccessRoute\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\HtaccessRoute\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "1093"
+		DefaultWebSiteLanguage = "Visual C#"
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{91795F29-0AE0-49C5-8357-7972F5C38813}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91795F29-0AE0-49C5-8357-7972F5C38813}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4AE40FED-BD92-44B9-B416-4DD11F8D55C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4AE40FED-BD92-44B9-B416-4DD11F8D55C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4AE40FED-BD92-44B9-B416-4DD11F8D55C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4AE40FED-BD92-44B9-B416-4DD11F8D55C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16C83444-D090-465C-B738-3D88A0F4E866}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16C83444-D090-465C-B738-3D88A0F4E866}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16C83444-D090-465C-B738-3D88A0F4E866}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{16C83444-D090-465C-B738-3D88A0F4E866}.Release|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
