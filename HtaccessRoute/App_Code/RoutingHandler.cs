@@ -85,7 +85,7 @@ public class RoutingHandler : IRouteHandler
     #region Constructor
     public RoutingHandler(string defaultPage, Uri baseUri)
     {
-        this.BaseUri = baseUri;
+        this.m_baseUri = baseUri;
         this.DefaultPage = defaultPage;
     }
     #endregion
@@ -93,34 +93,49 @@ public class RoutingHandler : IRouteHandler
     #region Methods
     public IHttpHandler GetHttpHandler(HttpRequest request)
     {
+        Uri baseUri = this.m_baseUri;
+        if (baseUri == null)
+        {
+            string url = string.Format("{0}://{1}{2}", request.Url.Scheme, request.Url.Authority, request.ApplicationPath);
+            baseUri = new Uri(url);
+        }
+
         if (request != null && request.Url != null)
         {
             string requestUrl = request.Url.ToString();
-            return this.HandlePage(requestUrl);
+            return this.HandlePage(requestUrl, baseUri);
         }
 
         //return BuildManager.CreateInstanceFromVirtualPath(this.VirtualPath, typeof(Page)) as IHttpHandler;
-        return GenericHttpHandler.Create(this.DefaultPage, this.BaseUri) as IHttpHandler;
+        return GenericHttpHandler.Create(this.DefaultPage, baseUri) as IHttpHandler;
     }
 
     public IHttpHandler GetHttpHandler(RequestContext requestContext)
     {
+        Uri baseUri = this.m_baseUri;
+        if (baseUri == null)
+        {
+            HttpRequestBase request = requestContext.HttpContext.Request;
+            string url = string.Format("{0}://{1}{2}", request.Url.Scheme, request.Url.Authority, request.ApplicationPath);
+            baseUri = new Uri(url);
+        }
+
         if (requestContext.RouteData.Values.ContainsKey("page"))
         {
             string requestUrl = requestContext.RouteData.Values["page"].ToString();
-            return this.HandlePage(requestUrl);
+            return this.HandlePage(requestUrl, baseUri);
         }
-
+        
         foreach (var urlParm in requestContext.RouteData.Values)
         {
             requestContext.HttpContext.Items[urlParm.Key] = urlParm.Value;
         }
 
         //return BuildManager.CreateInstanceFromVirtualPath(this.VirtualPath, typeof(Page)) as IHttpHandler;
-        return GenericHttpHandler.Create(this.DefaultPage, this.BaseUri) as IHttpHandler;
+        return GenericHttpHandler.Create(this.DefaultPage, baseUri) as IHttpHandler;
     }
 
-    private IHttpHandler HandlePage(string requestUrl)
+    private IHttpHandler HandlePage(string requestUrl, Uri baseUri)
     {
         if (!string.IsNullOrEmpty(requestUrl))
         {
@@ -132,24 +147,24 @@ public class RoutingHandler : IRouteHandler
                     string url = Regex.Replace(requestUrl, key, this.m_urlMatcher[key]);
                     try
                     {
-                        return GenericHttpHandler.Create(url, this.BaseUri) as IHttpHandler;
+                        return GenericHttpHandler.Create(url, baseUri) as IHttpHandler;
                     }
                     catch (HttpException ex)
                     {
                         System.Diagnostics.Debug.WriteLine(ex.Message);
-                        return this.GetErrorPage(500, ex);
+                        return this.GetErrorPage(500, ex, baseUri);
                     }
                 }
             }
         }
-        return GenericHttpHandler.Create(this.DefaultPage, this.BaseUri) as IHttpHandler;
+        return GenericHttpHandler.Create(this.DefaultPage, baseUri) as IHttpHandler;
     }
 
-    private IHttpHandler GetErrorPage(int errorCode, Exception ex)
+    private IHttpHandler GetErrorPage(int errorCode, Exception ex, Uri baseUri)
     {
         string errorPageUrl = this.m_errorDocuments[errorCode.ToString()];
         if (string.IsNullOrEmpty(errorPageUrl))
-            return GenericHttpHandler.Create(errorPageUrl, this.BaseUri) as IHttpHandler;
+            return GenericHttpHandler.Create(errorPageUrl, baseUri) as IHttpHandler;
 
         return GenericHttpHandler.Create(errorCode, ex) as IHttpHandler;
     }
@@ -185,24 +200,6 @@ public class RoutingHandler : IRouteHandler
     public bool IsReusable
     {
         get { return false; }
-    }
-
-    public Uri BaseUri 
-    {
-        get
-        {
-            if (this.m_baseUri == null)
-            {
-                try
-                {
-                    this.m_baseUri = HttpContext.Current.Request.Url;
-                }
-                catch
-                { }
-            }
-            return this.m_baseUri;
-        }
-        private set { this.m_baseUri = value; }
     }
 
     public string DefaultPage 

@@ -60,13 +60,14 @@ public class GenericHttpHandler : IHttpHandler
                 {
                     url += baseUri.Segments[i];
                 }
+                url = url.TrimEnd('/');
 
                 if (requestUrl.StartsWith("~/"))
-                    url += requestUrl.Substring(2);
+                    url += "/" + requestUrl.Substring(2);
                 else if (requestUrl.StartsWith("/"))
-                    url += requestUrl.Substring(1);
-                else
                     url += requestUrl;
+                else
+                    url += "/" + requestUrl;
 
                 try
                 {
@@ -112,10 +113,12 @@ public class GenericHttpHandler : IHttpHandler
                         {
                             url += requestUri.Segments[i];
                         }
+                        url = url.TrimEnd('/');
+
                         if (this.m_url.StartsWith("/"))
-                            url += this.m_url.Substring(1);
-                        else
                             url += this.m_url;
+                        else
+                            url += "/" + this.m_url;
                     }
 
                     uri = new Uri(url);
